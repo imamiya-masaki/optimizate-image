@@ -1,0 +1,19 @@
+{
+  "name": "optimizate-image",
+  "version": "1.0.0",
+  "description": "画像の最適化",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "@squoosh/lib": "^0.5.3"
+  },
+  "scripts": {
+    "compile": "tsc index.ts",
+    "optimize": "node index.js"
+  },
+  "devDependencies": {
+    "@types/node": "^18.11.18",
+    "typescript": "^4.9.4"
+  },
+  "type": "module"
+}
