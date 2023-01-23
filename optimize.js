@@ -41,29 +41,64 @@ var lib_1 = require("@squoosh/lib");
 var os_1 = require("os");
 var imagePool = new lib_1.ImagePool((0, os_1.cpus)().length);
 var fs = require("fs/promises");
-var optimize = function (width, height, filePath) {
+/**
+ * 指定されたfilepathの画像を最適化する
+ *
+ * @param filePath
+ * @param fileType
+ * @param option
+ */
+var optimize = function (filePath, fileType, option) {
+    var _a, _b, _c, _d, _e, _f;
     return __awaiter(this, void 0, void 0, function () {
-        var file, image, resize, preprocessOptions, encodeOption;
-        return __generator(this, function (_a) {
-            switch (_a.label) {
+        var file, image, preprocessOptions, avif, webp, encodeOption, result, extension, output;
+        return __generator(this, function (_g) {
+            switch (_g.label) {
                 case 0: return [4 /*yield*/, fs.readFile(filePath)];
                 case 1:
-                    file = _a.sent();
+                    file = _g.sent();
                     image = imagePool.ingestImage(file);
-                    resize = {
-                        width: width,
-                        height: height
-                    };
-                    preprocessOptions = { resize: resize };
+                    preprocessOptions = {};
+                    if (option.resize) {
+                        preprocessOptions.resize = option.resize;
+                    }
                     return [4 /*yield*/, image.preprocess(preprocessOptions)];
                 case 2:
-                    _a.sent();
-                    encodeOption = {
-                        mozjpeg: {},
-                        jxl: {
-                            quality: 90
-                        }
+                    _g.sent();
+                    avif = {
+                        quality: option.quality
                     };
+                    webp = {
+                        quality: option.quality
+                    };
+                    encodeOption = {
+                        avif: avif,
+                        webp: webp
+                    };
+                    return [4 /*yield*/, image.encode(encodeOption)];
+                case 3:
+                    result = _g.sent();
+                    extension = 'avif';
+                    switch (fileType) {
+                        case 'avif':
+                            extension = 'avif';
+                            output = (_b = (_a = result.avif) === null || _a === void 0 ? void 0 : _a.binary) !== null && _b !== void 0 ? _b : Buffer.from("");
+                            break;
+                        case 'jpeg':
+                            extension = 'jpeg';
+                            output = (_d = (_c = result.mozjpeg) === null || _c === void 0 ? void 0 : _c.binary) !== null && _d !== void 0 ? _d : Buffer.from("");
+                            break;
+                        case 'webp':
+                            extension = 'webp';
+                            output = (_f = (_e = result.webp) === null || _e === void 0 ? void 0 : _e.binary) !== null && _f !== void 0 ? _f : Buffer.from("");
+                            break;
+                    }
+                    return [4 /*yield*/, fs.writeFile(filePath, output)];
+                case 4:
+                    _g.sent();
+                    return [4 /*yield*/, imagePool.close()];
+                case 5:
+                    _g.sent();
                     return [2 /*return*/];
             }
         });
