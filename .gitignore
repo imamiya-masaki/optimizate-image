@@ -2,3 +2,4 @@ dst/**/*.[png|jpg|jpeg]
 src/*.[png|jpg|jpeg]
 node_modules/
 yarn-error.log
+.DS_Store

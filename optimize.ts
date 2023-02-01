@@ -12,7 +12,11 @@ export type OptimizeOption = Partial<{
     height: number
   },
   outputFileType?: FileType,
-  crop?: CropOption
+  crop?: CropOption,
+  rename?: {
+    prefix?: string,
+    suffix?: string
+  }
 }>;
 
 type EncoderOptions = {
@@ -24,7 +28,7 @@ type EncoderOptions = {
   oxipng?: Partial<OxiPngEncodeOptions>;
 };
 
-type FileType = 'avif' | 'webp' | 'jpeg' | 'png'
+export type FileType = 'avif' | 'webp' | 'jpeg' | 'png'
 
 type Image = ReturnType<typeof imagePool.ingestImage>
 type PreprocessOptions = NonNullable<Parameters<Image["preprocess"]>[0]>
@@ -53,9 +57,13 @@ export const optimize = async function (file: ArrayBuffer, fileType: FileType, o
   const webp: WebPEncodeOptions = {
     quality: option.quality
   };
+  const mozjpeg: MozJPEGEncodeOptions = {
+    quality: option.quality
+  }
   const encodeOption: EncodeOptions = {
     avif,
-    webp
+    webp,
+    mozjpeg
   }
   const result = await image.encode(encodeOption)
   
@@ -112,12 +120,13 @@ export const crop = async function (file: Buffer, fileType: FileSetType["fileTyp
 }
 
 
-
-export const imageExec = async function (filePath: string, commandSet: Set<CommandType>, option: OptimizeOption) {
+export type CommandSet = Set<CommandType>
+export const imageExec = async function (filePath: string, commandSet: CommandSet, option: OptimizeOption) {
   const lastFileName = filePath.split('/')[filePath.split('/').length - 1]
   const isDirectory = lastFileName === '';
   const targetFiles: {file: Buffer, fileType: FileType, filePath: string}[] = [];
   // 入力層
+  console.log(`imageExec: 入力層, commandSet = ${Array.from(commandSet).join(',')}`)
   if (isDirectory) {
     const fileNames = await fs.readdir(filePath)
     for (const fileName of fileNames) {
@@ -135,7 +144,6 @@ export const imageExec = async function (filePath: string, commandSet: Set<Comma
     let fileBuffer = targetFile.file
     let fileType = targetFile.fileType
 
-    // 処理層
     // Buffer | Uint8Arrayではなく、Buffer型で表したい時に利用
     if (commandSet.has("crop")) {
       fileBuffer = await crop(fileBuffer, fileType, option?.crop)
@@ -158,6 +166,7 @@ export const imageExec = async function (filePath: string, commandSet: Set<Comma
     })
   }
   // 出力層
+  console.log('出力層: outputFiles', outputFiles.map(file => file.filePath))
   for (const outputFile of outputFiles) {
     await fs.writeFile(outputFile.filePath, outputFile.file);
   }

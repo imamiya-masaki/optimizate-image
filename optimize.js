@@ -52,7 +52,7 @@ var imagePool = new lib_1.ImagePool((0, os_1.cpus)().length);
 var optimize = function (file, fileType, option) {
     var _a, _b, _c, _d, _e, _f, _g;
     return __awaiter(this, void 0, void 0, function () {
-        var image, preprocessOptions, outputFileType, avif, webp, encodeOption, result, extension, output;
+        var image, preprocessOptions, outputFileType, avif, webp, mozjpeg, encodeOption, result, extension, output;
         return __generator(this, function (_h) {
             switch (_h.label) {
                 case 0:
@@ -71,9 +71,13 @@ var optimize = function (file, fileType, option) {
                     webp = {
                         quality: option.quality
                     };
+                    mozjpeg = {
+                        quality: option.quality
+                    };
                     encodeOption = {
                         avif: avif,
-                        webp: webp
+                        webp: webp,
+                        mozjpeg: mozjpeg
                     };
                     return [4 /*yield*/, image.encode(encodeOption)];
                 case 2:
@@ -138,6 +142,8 @@ var imageExec = function (filePath, commandSet, option) {
                     lastFileName = filePath.split('/')[filePath.split('/').length - 1];
                     isDirectory = lastFileName === '';
                     targetFiles = [];
+                    // 入力層
+                    console.log("imageExec: \u5165\u529B\u5C64, commandSet = ".concat(Array.from(commandSet).join(',')));
                     if (!isDirectory) return [3 /*break*/, 6];
                     return [4 /*yield*/, fs.readdir(filePath)];
                 case 1:
@@ -202,6 +208,8 @@ var imageExec = function (filePath, commandSet, option) {
                     _a++;
                     return [3 /*break*/, 9];
                 case 15:
+                    // 出力層
+                    console.log('出力層: outputFiles', outputFiles.map(function (file) { return file.filePath; }));
                     _b = 0, outputFiles_1 = outputFiles;
                     _c.label = 16;
                 case 16:
