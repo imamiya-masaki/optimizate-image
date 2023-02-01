@@ -36,11 +36,12 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 exports.__esModule = true;
-exports.optimize = void 0;
+exports.assumeExtension = exports.imageExec = exports.crop = exports.optimize = void 0;
 var lib_1 = require("@squoosh/lib");
+var jimp_1 = require("jimp");
 var os_1 = require("os");
-var imagePool = new lib_1.ImagePool((0, os_1.cpus)().length);
 var fs = require("fs/promises");
+var imagePool = new lib_1.ImagePool((0, os_1.cpus)().length);
 /**
  * 指定されたfilepathの画像を最適化する
  *
@@ -48,23 +49,22 @@ var fs = require("fs/promises");
  * @param fileType
  * @param option
  */
-var optimize = function (filePath, fileType, option) {
-    var _a, _b, _c, _d, _e, _f;
+var optimize = function (file, fileType, option) {
+    var _a, _b, _c, _d, _e, _f, _g;
     return __awaiter(this, void 0, void 0, function () {
-        var file, image, preprocessOptions, avif, webp, encodeOption, result, extension, output;
-        return __generator(this, function (_g) {
-            switch (_g.label) {
-                case 0: return [4 /*yield*/, fs.readFile(filePath)];
-                case 1:
-                    file = _g.sent();
+        var image, preprocessOptions, outputFileType, avif, webp, encodeOption, result, extension, output;
+        return __generator(this, function (_h) {
+            switch (_h.label) {
+                case 0:
                     image = imagePool.ingestImage(file);
                     preprocessOptions = {};
+                    outputFileType = (_a = option.outputFileType) !== null && _a !== void 0 ? _a : fileType;
                     if (option.resize) {
                         preprocessOptions.resize = option.resize;
                     }
                     return [4 /*yield*/, image.preprocess(preprocessOptions)];
-                case 2:
-                    _g.sent();
+                case 1:
+                    _h.sent();
                     avif = {
                         quality: option.quality
                     };
@@ -76,32 +76,172 @@ var optimize = function (filePath, fileType, option) {
                         webp: webp
                     };
                     return [4 /*yield*/, image.encode(encodeOption)];
-                case 3:
-                    result = _g.sent();
+                case 2:
+                    result = _h.sent();
                     extension = 'avif';
-                    switch (fileType) {
+                    output = Buffer.from("");
+                    switch (outputFileType) {
                         case 'avif':
                             extension = 'avif';
-                            output = (_b = (_a = result.avif) === null || _a === void 0 ? void 0 : _a.binary) !== null && _b !== void 0 ? _b : Buffer.from("");
+                            output = (_c = (_b = result.avif) === null || _b === void 0 ? void 0 : _b.binary) !== null && _c !== void 0 ? _c : Buffer.from("");
                             break;
                         case 'jpeg':
                             extension = 'jpeg';
-                            output = (_d = (_c = result.mozjpeg) === null || _c === void 0 ? void 0 : _c.binary) !== null && _d !== void 0 ? _d : Buffer.from("");
+                            output = (_e = (_d = result.mozjpeg) === null || _d === void 0 ? void 0 : _d.binary) !== null && _e !== void 0 ? _e : Buffer.from("");
                             break;
                         case 'webp':
                             extension = 'webp';
-                            output = (_f = (_e = result.webp) === null || _e === void 0 ? void 0 : _e.binary) !== null && _f !== void 0 ? _f : Buffer.from("");
+                            output = (_g = (_f = result.webp) === null || _f === void 0 ? void 0 : _f.binary) !== null && _g !== void 0 ? _g : Buffer.from("");
                             break;
                     }
-                    return [4 /*yield*/, fs.writeFile(filePath, output)];
-                case 4:
-                    _g.sent();
-                    return [4 /*yield*/, imagePool.close()];
-                case 5:
-                    _g.sent();
-                    return [2 /*return*/];
+                    return [2 /*return*/, { file: output, fileType: extension }];
             }
         });
     });
 };
 exports.optimize = optimize;
+var crop = function (file, fileType, option) {
+    return __awaiter(this, void 0, void 0, function () {
+        var jimpLoaded, buffer;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    if (!(option === null || option === void 0 ? void 0 : option.crop)) {
+                        throw Error("not specified crop number");
+                    }
+                    switch (fileType) {
+                        case 'jpeg':
+                        case 'png':
+                            break;
+                        default:
+                            throw Error("dont support type of resize");
+                    }
+                    return [4 /*yield*/, jimp_1["default"].read(file)];
+                case 1:
+                    jimpLoaded = _a.sent();
+                    jimpLoaded.crop.apply(jimpLoaded, option.crop);
+                    return [4 /*yield*/, jimpLoaded.getBufferAsync("image/" + fileType)];
+                case 2:
+                    buffer = _a.sent();
+                    return [2 /*return*/, buffer];
+            }
+        });
+    });
+};
+exports.crop = crop;
+var imageExec = function (filePath, commandSet, option) {
+    return __awaiter(this, void 0, void 0, function () {
+        var lastFileName, isDirectory, targetFiles, fileNames, _i, fileNames_1, fileName, file, fileType, file, fileType, outputFiles, _a, targetFiles_1, targetFile, fileBuffer, fileType, output, outputFile, outputFileType, splitFilePath, outputLastFileSplitName, outputLastFileName, outputFilePath, _b, outputFiles_1, outputFile;
+        return __generator(this, function (_c) {
+            switch (_c.label) {
+                case 0:
+                    lastFileName = filePath.split('/')[filePath.split('/').length - 1];
+                    isDirectory = lastFileName === '';
+                    targetFiles = [];
+                    if (!isDirectory) return [3 /*break*/, 6];
+                    return [4 /*yield*/, fs.readdir(filePath)];
+                case 1:
+                    fileNames = _c.sent();
+                    _i = 0, fileNames_1 = fileNames;
+                    _c.label = 2;
+                case 2:
+                    if (!(_i < fileNames_1.length)) return [3 /*break*/, 5];
+                    fileName = fileNames_1[_i];
+                    return [4 /*yield*/, fs.readFile(filePath + fileName)];
+                case 3:
+                    file = _c.sent();
+                    fileType = (0, exports.assumeExtension)(filePath + fileName);
+                    targetFiles.push({ file: file, fileType: fileType, filePath: filePath + fileName });
+                    _c.label = 4;
+                case 4:
+                    _i++;
+                    return [3 /*break*/, 2];
+                case 5: return [3 /*break*/, 8];
+                case 6: return [4 /*yield*/, fs.readFile(filePath)];
+                case 7:
+                    file = _c.sent();
+                    fileType = (0, exports.assumeExtension)(filePath);
+                    targetFiles.push({ file: file, fileType: fileType, filePath: filePath });
+                    _c.label = 8;
+                case 8:
+                    outputFiles = [];
+                    _a = 0, targetFiles_1 = targetFiles;
+                    _c.label = 9;
+                case 9:
+                    if (!(_a < targetFiles_1.length)) return [3 /*break*/, 15];
+                    targetFile = targetFiles_1[_a];
+                    fileBuffer = targetFile.file;
+                    fileType = targetFile.fileType;
+                    if (!commandSet.has("crop")) return [3 /*break*/, 11];
+                    return [4 /*yield*/, (0, exports.crop)(fileBuffer, fileType, option === null || option === void 0 ? void 0 : option.crop)];
+                case 10:
+                    fileBuffer = _c.sent();
+                    _c.label = 11;
+                case 11:
+                    output = { file: fileBuffer, fileType: fileType };
+                    if (!commandSet.has("optimize")) return [3 /*break*/, 13];
+                    return [4 /*yield*/, (0, exports.optimize)(output.file, output.fileType, option)];
+                case 12:
+                    output = _c.sent();
+                    _c.label = 13;
+                case 13:
+                    outputFile = output.file;
+                    outputFileType = output.fileType;
+                    splitFilePath = targetFile.filePath.split('/');
+                    outputLastFileSplitName = splitFilePath[splitFilePath.length - 1].split('.');
+                    outputLastFileSplitName[outputLastFileSplitName.length - 1] = outputFileType;
+                    outputLastFileName = outputLastFileSplitName.join('.');
+                    splitFilePath[splitFilePath.length - 1] = outputLastFileName;
+                    outputFilePath = splitFilePath.join('/');
+                    outputFiles.push({
+                        file: outputFile,
+                        filePath: outputFilePath
+                    });
+                    _c.label = 14;
+                case 14:
+                    _a++;
+                    return [3 /*break*/, 9];
+                case 15:
+                    _b = 0, outputFiles_1 = outputFiles;
+                    _c.label = 16;
+                case 16:
+                    if (!(_b < outputFiles_1.length)) return [3 /*break*/, 19];
+                    outputFile = outputFiles_1[_b];
+                    return [4 /*yield*/, fs.writeFile(outputFile.filePath, outputFile.file)];
+                case 17:
+                    _c.sent();
+                    _c.label = 18;
+                case 18:
+                    _b++;
+                    return [3 /*break*/, 16];
+                case 19: return [4 /*yield*/, imagePool.close()];
+                case 20:
+                    _c.sent();
+                    return [2 /*return*/];
+            }
+        });
+    });
+};
+exports.imageExec = imageExec;
+var assumeExtension = function (filePath) {
+    var lastFileName = filePath.split('/')[filePath.split('/').length - 1];
+    var extension = lastFileName.split('.')[1];
+    var fileType = 'jpeg';
+    switch (extension) {
+        case "jpeg":
+        case "jpg":
+            fileType = 'jpeg';
+            break;
+        case "avif":
+            fileType = 'avif';
+            break;
+        case "webp":
+            fileType = 'webp';
+            break;
+        case "png":
+            fileType = 'png';
+            break;
+    }
+    return fileType;
+};
+exports.assumeExtension = assumeExtension;
