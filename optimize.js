@@ -42,7 +42,7 @@ var jimp_1 = require("jimp");
 var os_1 = require("os");
 var fs = require("fs/promises");
 var fileTypeArray = ['avif', 'webp', 'jpeg', 'png'];
-var squooshEncodeExtensions = ['avif', 'webp', 'mozjpeg'];
+var squooshEncodeExtensions = ['avif', 'webp', 'mozjpeg', 'oxipng'];
 var isSquooshEncodeExtension = function (str) {
     return squooshEncodeExtensions.includes(str);
 };
@@ -54,11 +54,11 @@ var isSquooshEncodeExtension = function (str) {
  * @param option
  */
 var optimize = function (image, fileType, option) {
-    var _a, _b, _c, _d, _e, _f, _g;
+    var _a, _b, _c, _d, _e, _f, _g, _h, _j;
     return __awaiter(this, void 0, void 0, function () {
-        var preprocessOptions, outputFileType, avif, webp, mozjpeg, encodeOption, _i, _h, key, result, extension, output;
-        return __generator(this, function (_j) {
-            switch (_j.label) {
+        var preprocessOptions, outputFileType, avif, webp, mozjpeg, encodeOption, _i, _k, key, result, extension, output;
+        return __generator(this, function (_l) {
+            switch (_l.label) {
                 case 0:
                     preprocessOptions = {};
                     outputFileType = (_a = option.outputFileType) !== null && _a !== void 0 ? _a : fileType;
@@ -67,7 +67,7 @@ var optimize = function (image, fileType, option) {
                     }
                     return [4 /*yield*/, image.preprocess(preprocessOptions)];
                 case 1:
-                    _j.sent();
+                    _l.sent();
                     avif = {
                         quality: option.quality
                     };
@@ -80,11 +80,12 @@ var optimize = function (image, fileType, option) {
                     encodeOption = {
                         avif: {},
                         webp: {},
-                        mozjpeg: {}
+                        mozjpeg: {},
+                        oxipng: {}
                     };
                     if (option.quality) {
-                        for (_i = 0, _h = Object.keys(encodeOption); _i < _h.length; _i++) {
-                            key = _h[_i];
+                        for (_i = 0, _k = Object.keys(encodeOption); _i < _k.length; _i++) {
+                            key = _k[_i];
                             if (isSquooshEncodeExtension(key)) {
                                 encodeOption[key].quality = option.quality;
                             }
@@ -92,7 +93,7 @@ var optimize = function (image, fileType, option) {
                     }
                     return [4 /*yield*/, image.encode(encodeOption)];
                 case 2:
-                    result = _j.sent();
+                    result = _l.sent();
                     extension = 'avif';
                     output = Buffer.from("");
                     switch (outputFileType) {
@@ -108,6 +109,9 @@ var optimize = function (image, fileType, option) {
                             extension = 'webp';
                             output = (_g = (_f = result.webp) === null || _f === void 0 ? void 0 : _f.binary) !== null && _g !== void 0 ? _g : Buffer.from("");
                             break;
+                        case 'png':
+                            extension = 'png';
+                            output = (_j = (_h = result.oxipng) === null || _h === void 0 ? void 0 : _h.binary) !== null && _j !== void 0 ? _j : Buffer.from("");
                     }
                     return [2 /*return*/, { file: output, fileType: extension }];
             }
@@ -222,7 +226,7 @@ var imageExec = function (filePath, commandSet, option) {
                     return [3 /*break*/, 9];
                 case 15:
                     // 出力層
-                    console.log('出力層: outputFiles', outputFiles.map(function (file) { return file.filePath; }));
+                    console.log('出力層: outputFiles', outputFiles.map(function (file) { return file.filePath; }), 'dstFilePath: ', filePath);
                     _b = 0, outputFiles_1 = outputFiles;
                     _c.label = 16;
                 case 16:

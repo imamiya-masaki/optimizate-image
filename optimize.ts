@@ -31,7 +31,7 @@ const fileTypeArray = ['avif', 'webp', 'jpeg', 'png'] as const
 
 export type FileType = typeof fileTypeArray[number]
 
-const squooshEncodeExtensions = ['avif', 'webp', 'mozjpeg'] as const
+const squooshEncodeExtensions = ['avif', 'webp', 'mozjpeg', 'oxipng'] as const
 
 export type SquooshEncodeExtension = typeof squooshEncodeExtensions[number]
 
@@ -77,6 +77,9 @@ export const optimize = async function (image: ReturnType<ImagePool["ingestImage
     },
     mozjpeg: {
 
+    },
+    oxipng: {
+
     }
   }
   if (option.quality) {
@@ -103,6 +106,9 @@ export const optimize = async function (image: ReturnType<ImagePool["ingestImage
       extension = 'webp';
       output = result.webp?.binary ?? Buffer.from("")
       break
+    case 'png':
+      extension = 'png';
+      output = result.oxipng?.binary ?? Buffer.from("")
   }
 
   return {file: output, fileType: extension}
@@ -188,7 +194,7 @@ export const imageExec = async function (filePath: string, commandSet: CommandSe
     })
   }
   // 出力層
-  console.log('出力層: outputFiles', outputFiles.map(file => file.filePath))
+  console.log('出力層: outputFiles', outputFiles.map(file => file.filePath), 'dstFilePath: ', filePath)
   for (const outputFile of outputFiles) {
     await fs.writeFile(outputFile.filePath, outputFile.file);
   }
