@@ -41,7 +41,11 @@ var lib_1 = require("@squoosh/lib");
 var jimp_1 = require("jimp");
 var os_1 = require("os");
 var fs = require("fs/promises");
-var imagePool = new lib_1.ImagePool((0, os_1.cpus)().length);
+var fileTypeArray = ['avif', 'webp', 'jpeg', 'png'];
+var squooshEncodeExtensions = ['avif', 'webp', 'mozjpeg'];
+var isSquooshEncodeExtension = function (str) {
+    return squooshEncodeExtensions.includes(str);
+};
 /**
  * 指定されたfilepathの画像を最適化する
  *
@@ -49,14 +53,13 @@ var imagePool = new lib_1.ImagePool((0, os_1.cpus)().length);
  * @param fileType
  * @param option
  */
-var optimize = function (file, fileType, option) {
+var optimize = function (image, fileType, option) {
     var _a, _b, _c, _d, _e, _f, _g;
     return __awaiter(this, void 0, void 0, function () {
-        var image, preprocessOptions, outputFileType, avif, webp, mozjpeg, encodeOption, result, extension, output;
-        return __generator(this, function (_h) {
-            switch (_h.label) {
+        var preprocessOptions, outputFileType, avif, webp, mozjpeg, encodeOption, _i, _h, key, result, extension, output;
+        return __generator(this, function (_j) {
+            switch (_j.label) {
                 case 0:
-                    image = imagePool.ingestImage(file);
                     preprocessOptions = {};
                     outputFileType = (_a = option.outputFileType) !== null && _a !== void 0 ? _a : fileType;
                     if (option.resize) {
@@ -64,7 +67,7 @@ var optimize = function (file, fileType, option) {
                     }
                     return [4 /*yield*/, image.preprocess(preprocessOptions)];
                 case 1:
-                    _h.sent();
+                    _j.sent();
                     avif = {
                         quality: option.quality
                     };
@@ -75,13 +78,21 @@ var optimize = function (file, fileType, option) {
                         quality: option.quality
                     };
                     encodeOption = {
-                        avif: avif,
-                        webp: webp,
-                        mozjpeg: mozjpeg
+                        avif: {},
+                        webp: {},
+                        mozjpeg: {}
                     };
+                    if (option.quality) {
+                        for (_i = 0, _h = Object.keys(encodeOption); _i < _h.length; _i++) {
+                            key = _h[_i];
+                            if (isSquooshEncodeExtension(key)) {
+                                encodeOption[key].quality = option.quality;
+                            }
+                        }
+                    }
                     return [4 /*yield*/, image.encode(encodeOption)];
                 case 2:
-                    result = _h.sent();
+                    result = _j.sent();
                     extension = 'avif';
                     output = Buffer.from("");
                     switch (outputFileType) {
@@ -135,15 +146,16 @@ var crop = function (file, fileType, option) {
 exports.crop = crop;
 var imageExec = function (filePath, commandSet, option) {
     return __awaiter(this, void 0, void 0, function () {
-        var lastFileName, isDirectory, targetFiles, fileNames, _i, fileNames_1, fileName, file, fileType, file, fileType, outputFiles, _a, targetFiles_1, targetFile, fileBuffer, fileType, output, outputFile, outputFileType, splitFilePath, outputLastFileSplitName, outputLastFileName, outputFilePath, _b, outputFiles_1, outputFile;
+        var imagePool, lastFileName, isDirectory, targetFiles, fileNames, _i, fileNames_1, fileName, file, fileType, file, fileType, outputFiles, _a, targetFiles_1, targetFile, fileBuffer, fileType, output, image, outputFile, outputFileType, splitFilePath, outputLastFileSplitName, outputLastFileName, outputFilePath, _b, outputFiles_1, outputFile;
         return __generator(this, function (_c) {
             switch (_c.label) {
                 case 0:
+                    imagePool = new lib_1.ImagePool((0, os_1.cpus)().length);
                     lastFileName = filePath.split('/')[filePath.split('/').length - 1];
                     isDirectory = lastFileName === '';
                     targetFiles = [];
                     // 入力層
-                    console.log("imageExec: \u5165\u529B\u5C64, commandSet = ".concat(Array.from(commandSet).join(',')));
+                    console.log("imageExec: \u5165\u529B\u5C64, commandSet = ".concat(Array.from(commandSet).join(','), ", outputFileType = ").concat(option.outputFileType));
                     if (!isDirectory) return [3 /*break*/, 6];
                     return [4 /*yield*/, fs.readdir(filePath)];
                 case 1:
@@ -186,7 +198,8 @@ var imageExec = function (filePath, commandSet, option) {
                 case 11:
                     output = { file: fileBuffer, fileType: fileType };
                     if (!commandSet.has("optimize")) return [3 /*break*/, 13];
-                    return [4 /*yield*/, (0, exports.optimize)(output.file, output.fileType, option)];
+                    image = imagePool.ingestImage(output.file);
+                    return [4 /*yield*/, (0, exports.optimize)(image, output.fileType, option)];
                 case 12:
                     output = _c.sent();
                     _c.label = 13;

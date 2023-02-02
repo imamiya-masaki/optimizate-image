@@ -4,7 +4,6 @@ import jimp from 'jimp'
 import { AvifEncodeOptions, codecs as encoders, JxlEncodeOptions, MozJPEGEncodeOptions, OxiPngEncodeOptions, preprocessors, QuantOptions, ResizeOptions, RotateOptions, WebPEncodeOptions, WP2EncodeOptions } from '@squoosh/lib/build/codecs';
 import { cpus } from 'os';
 import * as fs from 'fs/promises';
-const imagePool = new ImagePool(cpus().length);
 export type OptimizeOption = Partial<{
   quality: number,
   resize?: {
@@ -28,9 +27,19 @@ type EncoderOptions = {
   oxipng?: Partial<OxiPngEncodeOptions>;
 };
 
-export type FileType = 'avif' | 'webp' | 'jpeg' | 'png'
+const fileTypeArray = ['avif', 'webp', 'jpeg', 'png'] as const
 
-type Image = ReturnType<typeof imagePool.ingestImage>
+export type FileType = typeof fileTypeArray[number]
+
+const squooshEncodeExtensions = ['avif', 'webp', 'mozjpeg'] as const
+
+export type SquooshEncodeExtension = typeof squooshEncodeExtensions[number]
+
+const isSquooshEncodeExtension = function (str: any): str is SquooshEncodeExtension {
+  return squooshEncodeExtensions.includes(str)
+}
+
+type Image = ReturnType<ImagePool["ingestImage"]>
 type PreprocessOptions = NonNullable<Parameters<Image["preprocess"]>[0]>
 type EncodeOptions = Parameters<Image["encode"]>[0]
 type FileSetType = {file: Buffer | Uint8Array, fileType: FileType}
@@ -43,8 +52,7 @@ type CommandType = 'crop' | 'optimize'
  * @param fileType 
  * @param option 
  */
-export const optimize = async function (file: ArrayBuffer, fileType: FileType, option: OptimizeOption): Promise<FileSetType> {
-  const image = imagePool.ingestImage(file);
+export const optimize = async function (image: ReturnType<ImagePool["ingestImage"]>, fileType: FileType, option: OptimizeOption): Promise<FileSetType> {
   const preprocessOptions: PreprocessOptions = {}
   const outputFileType = option.outputFileType ?? fileType
   if (option.resize) {
@@ -61,9 +69,22 @@ export const optimize = async function (file: ArrayBuffer, fileType: FileType, o
     quality: option.quality
   }
   const encodeOption: EncodeOptions = {
-    avif,
-    webp,
-    mozjpeg
+    avif: {
+
+    },
+    webp: {
+
+    },
+    mozjpeg: {
+
+    }
+  }
+  if (option.quality) {
+    for (const key of Object.keys(encodeOption)) {
+      if (isSquooshEncodeExtension(key)) {
+        encodeOption[key].quality = option.quality
+      }
+    }
   }
   const result = await image.encode(encodeOption)
   
@@ -83,7 +104,6 @@ export const optimize = async function (file: ArrayBuffer, fileType: FileType, o
       output = result.webp?.binary ?? Buffer.from("")
       break
   }
-  
 
   return {file: output, fileType: extension}
 }
@@ -122,11 +142,12 @@ export const crop = async function (file: Buffer, fileType: FileSetType["fileTyp
 
 export type CommandSet = Set<CommandType>
 export const imageExec = async function (filePath: string, commandSet: CommandSet, option: OptimizeOption) {
+  const imagePool = new ImagePool(cpus().length);
   const lastFileName = filePath.split('/')[filePath.split('/').length - 1]
   const isDirectory = lastFileName === '';
   const targetFiles: {file: Buffer, fileType: FileType, filePath: string}[] = [];
   // 入力層
-  console.log(`imageExec: 入力層, commandSet = ${Array.from(commandSet).join(',')}`)
+  console.log(`imageExec: 入力層, commandSet = ${Array.from(commandSet).join(',')}, outputFileType = ${option.outputFileType}`)
   if (isDirectory) {
     const fileNames = await fs.readdir(filePath)
     for (const fileName of fileNames) {
@@ -150,7 +171,8 @@ export const imageExec = async function (filePath: string, commandSet: CommandSe
     }
     let output: FileSetType = {file: fileBuffer, fileType: fileType}
     if (commandSet.has("optimize")) {
-      output = await optimize(output.file, output.fileType, option) 
+      const image = imagePool.ingestImage(output.file);
+      output = await optimize(image, output.fileType, option) 
     }
     const outputFile = output.file
     const outputFileType = output.fileType
