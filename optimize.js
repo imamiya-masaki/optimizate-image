@@ -36,12 +36,24 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 exports.__esModule = true;
-exports.assumeExtension = exports.imageExec = exports.crop = exports.optimize = void 0;
+exports.assumeExtension = exports.imageExec = exports.crop = exports.optimize = exports.isFileType = exports.fileTypeArray = exports.isOptimizeOptionResize = exports.isObject = void 0;
 var lib_1 = require("@squoosh/lib");
 var jimp_1 = require("jimp");
 var os_1 = require("os");
 var fs = require("fs/promises");
-var fileTypeArray = ['avif', 'webp', 'jpeg', 'png'];
+var isObject = function (value) {
+    return value !== null && typeof value === 'object';
+};
+exports.isObject = isObject;
+var isOptimizeOptionResize = function (obj) {
+    return (0, exports.isObject)(obj) && (Object.hasOwn(obj, "width") || Object.hasOwn(obj, "height"));
+};
+exports.isOptimizeOptionResize = isOptimizeOptionResize;
+exports.fileTypeArray = ['avif', 'webp', 'jpeg', 'png'];
+var isFileType = function (str) {
+    return exports.fileTypeArray.includes(str);
+};
+exports.isFileType = isFileType;
 var squooshEncodeExtensions = ['avif', 'webp', 'mozjpeg', 'oxipng'];
 var isSquooshEncodeExtension = function (str) {
     return squooshEncodeExtensions.includes(str);

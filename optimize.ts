@@ -4,12 +4,11 @@ import jimp from 'jimp'
 import { AvifEncodeOptions, codecs as encoders, JxlEncodeOptions, MozJPEGEncodeOptions, OxiPngEncodeOptions, preprocessors, QuantOptions, ResizeOptions, RotateOptions, WebPEncodeOptions, WP2EncodeOptions } from '@squoosh/lib/build/codecs';
 import { cpus } from 'os';
 import * as fs from 'fs/promises';
+
+
 export type OptimizeOption = Partial<{
   quality: number,
-  resize?: {
-    width: number,
-    height: number
-  },
+  resize?: { width: number} | {height: number} | {width: number, height: number},
   outputFileType?: FileType,
   crop?: CropOption,
   rename?: {
@@ -17,6 +16,14 @@ export type OptimizeOption = Partial<{
     suffix?: string
   }
 }>;
+
+export const isObject = function (value: any): value is object {
+  return value !== null && typeof value === 'object'
+}
+
+export const isOptimizeOptionResize = function (obj: any): obj is OptimizeOption["resize"] {
+  return isObject(obj) && (Object.hasOwn(obj, "width") || Object.hasOwn(obj, "height"))
+}
 
 type EncoderOptions = {
   mozjpeg?: Partial<MozJPEGEncodeOptions>;
@@ -27,9 +34,13 @@ type EncoderOptions = {
   oxipng?: Partial<OxiPngEncodeOptions>;
 };
 
-const fileTypeArray = ['avif', 'webp', 'jpeg', 'png'] as const
+export const fileTypeArray = ['avif', 'webp', 'jpeg', 'png'] as const
 
 export type FileType = typeof fileTypeArray[number]
+
+export const isFileType = function (str: any): str is FileType {
+  return fileTypeArray.includes(str)
+}
 
 const squooshEncodeExtensions = ['avif', 'webp', 'mozjpeg', 'oxipng'] as const
 
