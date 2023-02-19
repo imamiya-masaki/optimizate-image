@@ -151,18 +151,16 @@ export const crop = async function (file: Buffer, fileType: FileSetType["fileTyp
     default:
       throw Error("dont support type of resize")
   }
-  console.log('option.crop', option.crop)
-  console.log('imagesize', ImageSize.imageSize(file));
   const jimpLoaded = await Jimp.read(file)
   jimpLoaded.crop(...option.crop)
   const buffer = jimpLoaded.getBufferAsync("image/" + fileType)
-  console.log('crop:buffer', buffer)
   return buffer
 }
 
 
 export type CommandSet = Set<CommandType>
 export const imageExec = async function (filePath: string, commandSet: CommandSet, option: OptimizeOption) {
+  console.log({filePath, commandSet, option})
   const imagePool = new ImagePool(cpus().length);
   const lastFileName = filePath.split('/')[filePath.split('/').length - 1]
   const isDirectory = lastFileName === '';
@@ -188,27 +186,7 @@ export const imageExec = async function (filePath: string, commandSet: CommandSe
 
     // Buffer | Uint8Arrayではなく、Buffer型で表したい時に利用
     if (commandSet.has("crop")) {
-      let cropVariables = option?.crop
-      const fileSize = ImageSize.imageSize(fileBuffer)
-      /**
-       * experimental
-       * 
-       * cropの指定変数が、元のサイズを上回った時に、
-       * 指定変数側を調整する
-       */
-      let isadJustCropVariable = true;
-      if (isadJustCropVariable) {
-        let [x,y,w,h] = cropVariables
-        if (x + w > (fileSize.width ?? 0)) {
-          const diffX = (x+w) - (fileSize.width ?? 0)
-          // x側を調整する
-          if (x + w <= diffX) {
-            // diffXを超えてる場合に、
-            x = 0;
-            w = fileSize.width ?? 0;
-          }
-        }
-      }
+      console.log('option', option)
       fileBuffer = await crop(fileBuffer, fileType, option?.crop)
     }
     let output: FileSetType = {file: fileBuffer, fileType: fileType}
@@ -235,6 +213,7 @@ export const imageExec = async function (filePath: string, commandSet: CommandSe
     await fs.writeFile(outputFile.filePath, outputFile.file);
   }
   await imagePool.close();
+  return outputFiles
 }
 
 export const assumeExtension = function (filePath: string): FileType {

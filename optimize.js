@@ -38,7 +38,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 exports.__esModule = true;
 exports.assumeExtension = exports.imageExec = exports.crop = exports.optimize = exports.isFileType = exports.fileTypeArray = exports.isOptimizeOptionResize = exports.isObject = void 0;
 var lib_1 = require("@squoosh/lib");
-var jimp_1 = require("jimp");
+var es_1 = require("jimp/es");
 var os_1 = require("os");
 var fs = require("fs/promises");
 var isObject = function (value) {
@@ -147,13 +147,11 @@ var crop = function (file, fileType, option) {
                         default:
                             throw Error("dont support type of resize");
                     }
-                    return [4 /*yield*/, jimp_1["default"].read(file)];
+                    return [4 /*yield*/, es_1["default"].read(file)];
                 case 1:
                     jimpLoaded = _a.sent();
                     jimpLoaded.crop.apply(jimpLoaded, option.crop);
-                    return [4 /*yield*/, jimpLoaded.getBufferAsync("image/" + fileType)];
-                case 2:
-                    buffer = _a.sent();
+                    buffer = jimpLoaded.getBufferAsync("image/" + fileType);
                     return [2 /*return*/, buffer];
             }
         });
@@ -166,6 +164,7 @@ var imageExec = function (filePath, commandSet, option) {
         return __generator(this, function (_c) {
             switch (_c.label) {
                 case 0:
+                    console.log({ filePath: filePath, commandSet: commandSet, option: option });
                     imagePool = new lib_1.ImagePool((0, os_1.cpus)().length);
                     lastFileName = filePath.split('/')[filePath.split('/').length - 1];
                     isDirectory = lastFileName === '';
@@ -207,6 +206,7 @@ var imageExec = function (filePath, commandSet, option) {
                     fileBuffer = targetFile.file;
                     fileType = targetFile.fileType;
                     if (!commandSet.has("crop")) return [3 /*break*/, 11];
+                    console.log('option', option);
                     return [4 /*yield*/, (0, exports.crop)(fileBuffer, fileType, option === null || option === void 0 ? void 0 : option.crop)];
                 case 10:
                     fileBuffer = _c.sent();
@@ -254,7 +254,7 @@ var imageExec = function (filePath, commandSet, option) {
                 case 19: return [4 /*yield*/, imagePool.close()];
                 case 20:
                     _c.sent();
-                    return [2 /*return*/];
+                    return [2 /*return*/, outputFiles];
             }
         });
     });
