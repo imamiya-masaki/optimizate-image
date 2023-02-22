@@ -48,7 +48,7 @@ commander_1.program
 commander_1.program.parse(process.argv);
 var exec = function () {
     return __awaiter(this, void 0, void 0, function () {
-        var options, setOption, commands, resize, cropNumbers, x, y, w, h;
+        var options, setOption, commands, resize, cropNumbers, x, y, w, h, cropNumbers, w, h;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
@@ -57,6 +57,11 @@ var exec = function () {
                     setOption = {};
                     commands = new Set();
                     commands.add("optimize");
+                    // command-check
+                    if (options.midCrop && options.crop) {
+                        // midCropとcropは共存できない
+                        throw Error("Please select only one of midCrop or crop.");
+                    }
                     if (options.quality) {
                         if (Number.isNaN(Number(options.quality))) {
                             throw Error("The type of quality must be Number.");
@@ -98,6 +103,19 @@ var exec = function () {
                         }
                         else {
                             throw Error("The format of crop must be <number>,<number>,<number>,<number> .");
+                        }
+                        commands.add("crop");
+                    }
+                    if (options.midCrop) {
+                        cropNumbers = options.midCrop.split(',').map(function (str) { return Number(str); });
+                        if (cropNumbers.length === 2 && cropNumbers.every(function (num) { return !Number.isNaN(num); })) {
+                            w = cropNumbers[0], h = cropNumbers[1];
+                            setOption.crop = {
+                                midCrop: [w, h]
+                            };
+                        }
+                        else {
+                            throw Error("The format of mid-crop must be <number>,<number> .");
                         }
                         commands.add("crop");
                     }

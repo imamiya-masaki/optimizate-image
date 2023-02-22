@@ -125,14 +125,15 @@ export const optimize = async function (image: ReturnType<ImagePool["ingestImage
 
   return {file: output, fileType: extension}
 }
-
-type CropOption = {
-  crop: [
+type CropArray = [
   x: number,
   y: number,
   w: number,
   h: number
-  ],
+  ]
+type CropOption = {
+  crop?: CropArray,
+  midCrop?: [w: CropArray[2], h: CropArray[3]]
   // resize: [
   //   x: number,
   //   y: number
@@ -140,8 +141,27 @@ type CropOption = {
   // quality: number
 }
 
-export const crop = async function (file: Buffer, fileType: FileSetType["fileType"], option?: CropOption): Promise<Buffer> {
-  if (!option?.crop) {
+type Coordinate = {x: number, y: number}
+
+export const computeXY = async function (file: Buffer, fileType: FileSetType["fileType"], width: number ,height: number): Promise<Coordinate> {
+
+  if (fileType === "avif") {
+    throw Error("Not support mid-crop for avif")
+  } 
+  const imageSizeInfo = ImageSize.imageSize(file)
+  if (imageSizeInfo.width === undefined || imageSizeInfo.height === undefined) {
+    throw Error("Unexpected error in imagesize")
+  }
+  const midPoint: Coordinate = {x: imageSizeInfo.width / 2, y: imageSizeInfo.height / 2}
+  const computeCoordinate = {x: midPoint.x - (width/2), y: midPoint.y - (height/2)}
+  if (computeCoordinate.x < 0 || computeCoordinate.y < 0) {
+    throw Error("The width or height specified in mid-crop-option is too large")
+  }
+  return computeCoordinate
+}
+
+export const crop = async function (file: Buffer, fileType: FileSetType["fileType"], cropArray?: CropArray): Promise<Buffer> {
+  if (!cropArray) {
     throw Error("not specified crop number")
   }
   switch(fileType) {
@@ -152,7 +172,7 @@ export const crop = async function (file: Buffer, fileType: FileSetType["fileTyp
       throw Error("dont support type of resize")
   }
   const jimpLoaded = await Jimp.read(file)
-  jimpLoaded.crop(...option.crop)
+  jimpLoaded.crop(...cropArray)
   const buffer = jimpLoaded.getBufferAsync("image/" + fileType)
   return buffer
 }
@@ -186,8 +206,17 @@ export const imageExec = async function (filePath: string, commandSet: CommandSe
 
     // Buffer | Uint8Arrayではなく、Buffer型で表したい時に利用
     if (commandSet.has("crop")) {
-      console.log('option', option)
-      fileBuffer = await crop(fileBuffer, fileType, option?.crop)
+      let cropArray = option?.crop?.crop
+      if (option?.crop?.midCrop) {
+        const midCropArray = option?.crop?.midCrop
+        const computedCoordinate = await computeXY(fileBuffer, fileType, midCropArray[0], midCropArray[1])
+        cropArray = [computedCoordinate.x, computedCoordinate.y, ...midCropArray]
+      }
+      if (cropArray) {
+        fileBuffer = await crop(fileBuffer, fileType, cropArray)
+      } else {
+        throw Error("cropArray is undefined")
+      }
     }
     let output: FileSetType = {file: fileBuffer, fileType: fileType}
     if (commandSet.has("optimize")) {

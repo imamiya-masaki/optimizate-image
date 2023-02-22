@@ -24,6 +24,13 @@ const exec = async function () {
   const setOption: OptimizeOption = {}
   const commands: CommandSet = new Set()
   commands.add("optimize")
+
+  // command-check
+  if (options.midCrop && options.crop) {
+    // midCropとcropは共存できない
+    throw Error("Please select only one of midCrop or crop.")
+  }
+
   if (options.quality) {
     if (Number.isNaN(Number(options.quality))) {
       throw Error("The type of quality must be Number.")
@@ -64,6 +71,19 @@ const exec = async function () {
       }
     } else {
       throw Error("The format of crop must be <number>,<number>,<number>,<number> .")
+    }
+    commands.add("crop")
+  }
+
+  if (options.midCrop) {
+    const cropNumbers = options.midCrop.split(',').map(str => Number(str))
+    if (cropNumbers.length === 2 && cropNumbers.every(num => !Number.isNaN(num))) {
+      const [w,h] = cropNumbers
+      setOption.crop = {
+        midCrop: [w,h]
+      }
+    } else {
+      throw Error("The format of mid-crop must be <number>,<number> .")
     }
     commands.add("crop")
   }
