@@ -122,7 +122,7 @@ var exec = function () {
                     // exec
                     console.log("args", commander_1.program.args);
                     if (commander_1.program.args.length !== 1) {
-                        throw Error("only one argument is required");
+                        throw Error("only one filepath argument is required ");
                     }
                     return [4 /*yield*/, (0, optimize_1.imageExec)(commander_1.program.args[0], commands, setOption)];
                 case 1:

@@ -90,7 +90,7 @@ const exec = async function () {
   // exec
   console.log("args", program.args)
   if (program.args.length !== 1) {
-    throw Error("only one argument is required")
+    throw Error("only one filepath argument is required ")
   }
   await imageExec(program.args[0], commands, setOption)
 
