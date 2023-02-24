@@ -1,0 +1,16 @@
+name: GitHub optimize-image CI
+run-name: GitHub CI
+on: [push]
+jobs:
+  unittest:
+    runs-on: ubuntu-latest
+  steps: 
+    - uses: actions/checkout@v3
+    - name: Set up Node
+      uses: actions/setup-node@v3
+      with:
+        node-version: "18"
+    - name: Install dependencies
+      run: yarn
+    - name: test
+      run: yarn test

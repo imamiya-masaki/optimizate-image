@@ -9,6 +9,9 @@
     "commander": "^10.0.0",
     "jimp": "^0.16.2"
   },
+  "engines": {
+    "node": ">=16.0.0"
+  },
   "scripts": {
     "compile": "tsc index.ts",
     "optimize": "node index.js",
