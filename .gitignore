@@ -1,5 +1,5 @@
-dst/**/*.[png|jpg|jpeg]
-src/*.[png|jpg|jpeg]
+__tests__/dst/**/*.(png|jpg|jpeg)
+__tests__/src/**/*.(png|jpg|jpeg)
 node_modules/
 yarn-error.log
 .DS_Store
