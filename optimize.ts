@@ -5,7 +5,7 @@ import Jimp from 'jimp/es'
 import { AvifEncodeOptions, codecs as encoders, JxlEncodeOptions, MozJPEGEncodeOptions, OxiPngEncodeOptions, preprocessors, QuantOptions, ResizeOptions, RotateOptions, WebPEncodeOptions, WP2EncodeOptions } from '@squoosh/lib/build/codecs';
 import { cpus } from 'os';
 import * as fs from 'fs/promises';
-
+import * as fsSync from 'fs';
 
 export type OptimizeOption = Partial<{
   quality: number,
@@ -143,6 +143,12 @@ type CropOption = {
 
 type Coordinate = {x: number, y: number}
 
+const listFiles = (dir: string): string[] =>
+  fsSync.readdirSync(dir, { withFileTypes: true }).flatMap(dirent =>
+    dirent.isFile() ? [`${dir}/${dirent.name}`] : listFiles(`${dir}/${dirent.name}`)
+  )
+
+
 export const computeXY = async function (file: Buffer, fileType: FileSetType["fileType"], width: number ,height: number): Promise<Coordinate> {
 
   if (fileType === "avif") {
@@ -188,11 +194,11 @@ export const imageExec = async function (filePath: string, commandSet: CommandSe
   // 入力層
   console.log(`imageExec: 入力層, commandSet = ${Array.from(commandSet).join(',')}, outputFileType = ${option.outputFileType}`)
   if (isDirectory) {
-    const fileNames = await fs.readdir(filePath)
+    const fileNames = listFiles(filePath)
     for (const fileName of fileNames) {
-      const file = await fs.readFile(filePath + fileName)
-      const fileType = assumeExtension(filePath + fileName)
-      targetFiles.push({file, fileType, filePath: filePath + fileName})
+      const file = await fs.readFile(fileName)
+      const fileType = assumeExtension(fileName)
+      targetFiles.push({file, fileType, filePath: fileName})
     }
   } else {
     const file = await fs.readFile(filePath);

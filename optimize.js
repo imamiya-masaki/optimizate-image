@@ -51,6 +51,7 @@ var ImageSize = require("image-size");
 var es_1 = require("jimp/es");
 var os_1 = require("os");
 var fs = require("fs/promises");
+var fsSync = require("fs");
 var isObject = function (value) {
     return value !== null && typeof value === 'object';
 };
@@ -141,6 +142,11 @@ var optimize = function (image, fileType, option) {
     });
 };
 exports.optimize = optimize;
+var listFiles = function (dir) {
+    return fsSync.readdirSync(dir, { withFileTypes: true }).flatMap(function (dirent) {
+        return dirent.isFile() ? ["".concat(dir, "/").concat(dirent.name)] : listFiles("".concat(dir, "/").concat(dirent.name));
+    });
+};
 var computeXY = function (file, fileType, width, height) {
     return __awaiter(this, void 0, void 0, function () {
         var imageSizeInfo, midPoint, computeCoordinate;
@@ -203,67 +209,65 @@ var imageExec = function (filePath, commandSet, option) {
                     targetFiles = [];
                     // 入力層
                     console.log("imageExec: \u5165\u529B\u5C64, commandSet = ".concat(Array.from(commandSet).join(','), ", outputFileType = ").concat(option.outputFileType));
-                    if (!isDirectory) return [3 /*break*/, 6];
-                    return [4 /*yield*/, fs.readdir(filePath)];
-                case 1:
-                    fileNames = _h.sent();
+                    if (!isDirectory) return [3 /*break*/, 5];
+                    fileNames = listFiles(filePath);
                     _i = 0, fileNames_1 = fileNames;
-                    _h.label = 2;
-                case 2:
-                    if (!(_i < fileNames_1.length)) return [3 /*break*/, 5];
+                    _h.label = 1;
+                case 1:
+                    if (!(_i < fileNames_1.length)) return [3 /*break*/, 4];
                     fileName = fileNames_1[_i];
-                    return [4 /*yield*/, fs.readFile(filePath + fileName)];
-                case 3:
+                    return [4 /*yield*/, fs.readFile(fileName)];
+                case 2:
                     file = _h.sent();
-                    fileType = (0, exports.assumeExtension)(filePath + fileName);
-                    targetFiles.push({ file: file, fileType: fileType, filePath: filePath + fileName });
-                    _h.label = 4;
-                case 4:
+                    fileType = (0, exports.assumeExtension)(fileName);
+                    targetFiles.push({ file: file, fileType: fileType, filePath: fileName });
+                    _h.label = 3;
+                case 3:
                     _i++;
-                    return [3 /*break*/, 2];
-                case 5: return [3 /*break*/, 8];
-                case 6: return [4 /*yield*/, fs.readFile(filePath)];
-                case 7:
+                    return [3 /*break*/, 1];
+                case 4: return [3 /*break*/, 7];
+                case 5: return [4 /*yield*/, fs.readFile(filePath)];
+                case 6:
                     file = _h.sent();
                     fileType = (0, exports.assumeExtension)(filePath);
                     targetFiles.push({ file: file, fileType: fileType, filePath: filePath });
-                    _h.label = 8;
-                case 8:
+                    _h.label = 7;
+                case 7:
                     outputFiles = [];
                     _f = 0, targetFiles_1 = targetFiles;
-                    _h.label = 9;
-                case 9:
-                    if (!(_f < targetFiles_1.length)) return [3 /*break*/, 18];
+                    _h.label = 8;
+                case 8:
+                    if (!(_f < targetFiles_1.length)) return [3 /*break*/, 17];
                     targetFile = targetFiles_1[_f];
                     fileBuffer = targetFile.file;
                     fileType = targetFile.fileType;
-                    if (!commandSet.has("crop")) return [3 /*break*/, 14];
+                    if (!commandSet.has("crop")) return [3 /*break*/, 13];
                     cropArray = (_a = option === null || option === void 0 ? void 0 : option.crop) === null || _a === void 0 ? void 0 : _a.crop;
-                    if (!((_b = option === null || option === void 0 ? void 0 : option.crop) === null || _b === void 0 ? void 0 : _b.midCrop)) return [3 /*break*/, 11];
+                    if (!((_b = option === null || option === void 0 ? void 0 : option.crop) === null || _b === void 0 ? void 0 : _b.midCrop)) return [3 /*break*/, 10];
                     midCropArray = (_c = option === null || option === void 0 ? void 0 : option.crop) === null || _c === void 0 ? void 0 : _c.midCrop;
                     return [4 /*yield*/, (0, exports.computeXY)(fileBuffer, fileType, midCropArray[0], midCropArray[1])];
-                case 10:
+                case 9:
                     computedCoordinate = _h.sent();
                     cropArray = __spreadArray([computedCoordinate.x, computedCoordinate.y], midCropArray, true);
-                    _h.label = 11;
-                case 11:
-                    if (!cropArray) return [3 /*break*/, 13];
+                    _h.label = 10;
+                case 10:
+                    if (!cropArray) return [3 /*break*/, 12];
                     return [4 /*yield*/, (0, exports.crop)(fileBuffer, fileType, cropArray)];
-                case 12:
+                case 11:
                     fileBuffer = _h.sent();
-                    return [3 /*break*/, 14];
-                case 13:
+                    return [3 /*break*/, 13];
+                case 12:
                     console.table(option === null || option === void 0 ? void 0 : option.crop);
                     throw Error("cropArray is undefined");
-                case 14:
+                case 13:
                     output = { file: fileBuffer, fileType: fileType };
-                    if (!commandSet.has("optimize")) return [3 /*break*/, 16];
+                    if (!commandSet.has("optimize")) return [3 /*break*/, 15];
                     image = imagePool.ingestImage(output.file);
                     return [4 /*yield*/, (0, exports.optimize)(image, output.fileType, option)];
-                case 15:
+                case 14:
                     output = _h.sent();
-                    _h.label = 16;
-                case 16:
+                    _h.label = 15;
+                case 15:
                     outputFile = output.file;
                     outputFileType = output.fileType;
                     splitFilePath = targetFile.filePath.split('/');
@@ -279,27 +283,27 @@ var imageExec = function (filePath, commandSet, option) {
                         file: outputFile,
                         filePath: outputFilePath
                     });
-                    _h.label = 17;
-                case 17:
+                    _h.label = 16;
+                case 16:
                     _f++;
-                    return [3 /*break*/, 9];
-                case 18:
+                    return [3 /*break*/, 8];
+                case 17:
                     // 出力層
                     console.log('出力層: outputFiles', outputFiles.map(function (file) { return file.filePath; }), 'dstFilePath: ', filePath);
                     _g = 0, outputFiles_1 = outputFiles;
-                    _h.label = 19;
-                case 19:
-                    if (!(_g < outputFiles_1.length)) return [3 /*break*/, 22];
+                    _h.label = 18;
+                case 18:
+                    if (!(_g < outputFiles_1.length)) return [3 /*break*/, 21];
                     outputFile = outputFiles_1[_g];
                     return [4 /*yield*/, fs.writeFile(outputFile.filePath, outputFile.file)];
-                case 20:
+                case 19:
                     _h.sent();
-                    _h.label = 21;
-                case 21:
+                    _h.label = 20;
+                case 20:
                     _g++;
-                    return [3 /*break*/, 19];
-                case 22: return [4 /*yield*/, imagePool.close()];
-                case 23:
+                    return [3 /*break*/, 18];
+                case 21: return [4 /*yield*/, imagePool.close()];
+                case 22:
                     _h.sent();
                     return [2 /*return*/, outputFiles];
             }
