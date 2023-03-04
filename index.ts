@@ -7,7 +7,8 @@ type ProgramOptions = {
   "crop"?: string,
   "quality"?: string,
   "outputFileType"?: string,
-  "midCrop"?: string
+  "midCrop"?: string,
+  "addSuffix"?: string
 }
 program
   .option('-rw, --resize-width <number>', 'for width resizing')
@@ -16,6 +17,7 @@ program
   .option('-q, --quality <number>', 'for image quality')
   .option('-ft, --output-file-type <number>', 'for output file type (e.g. avif , webp , ..etc)')
   .option('-mc, --mid-crop <number>,<number>', 'this is for mid crop <width, height>. it can expect x and y to crop near of mid')
+  .option('-an, --add-suffix <string>', 'add filename suffix')
 program.parse(process.argv);
 const exec = async function () {
   const options: ProgramOptions = program.opts();
@@ -86,6 +88,12 @@ const exec = async function () {
       throw Error("The format of mid-crop must be <number>,<number> .")
     }
     commands.add("crop")
+  }
+  if (options.addSuffix) {
+    if (!setOption.rename) {
+      setOption.rename = {} 
+    }
+    setOption.rename.suffix = options.addSuffix;
   }
   // exec
   console.log("args", program.args)

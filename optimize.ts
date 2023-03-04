@@ -215,6 +215,7 @@ export const imageExec = async function (filePath: string, commandSet: CommandSe
       if (cropArray) {
         fileBuffer = await crop(fileBuffer, fileType, cropArray)
       } else {
+        console.table(option?.crop)
         throw Error("cropArray is undefined")
       }
     }
@@ -227,6 +228,9 @@ export const imageExec = async function (filePath: string, commandSet: CommandSe
     const outputFileType = output.fileType
     let splitFilePath = targetFile.filePath.split('/')
     let  outputLastFileSplitName = splitFilePath[splitFilePath.length - 1].split('.')
+    if (option.rename?.suffix) {
+      outputLastFileSplitName[outputLastFileSplitName.length - 2] = outputLastFileSplitName[outputLastFileSplitName.length - 2] + "-" + option.rename?.suffix
+    }
     outputLastFileSplitName[outputLastFileSplitName.length - 1] = outputFileType
     const outputLastFileName = outputLastFileSplitName.join('.')
     splitFilePath[splitFilePath.length - 1] = outputLastFileName

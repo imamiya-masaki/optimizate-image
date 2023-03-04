@@ -1,0 +1,1 @@
+directory=`dirname "$0"`

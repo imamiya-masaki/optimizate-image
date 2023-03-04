@@ -44,7 +44,8 @@ commander_1.program
     .option('-c, --crop <number>,<number>,<number>,<number>', 'for crop start <x,y,width,height>')
     .option('-q, --quality <number>', 'for image quality')
     .option('-ft, --output-file-type <number>', 'for output file type (e.g. avif , webp , ..etc)')
-    .option('-mc, --mid-crop <number>,<number>', 'this is for mid crop <width, height>. it can expect x and y to crop near of mid');
+    .option('-mc, --mid-crop <number>,<number>', 'this is for mid crop <width, height>. it can expect x and y to crop near of mid')
+    .option('-an, --add-suffix <string>', 'add filename suffix');
 commander_1.program.parse(process.argv);
 var exec = function () {
     return __awaiter(this, void 0, void 0, function () {
@@ -118,6 +119,12 @@ var exec = function () {
                             throw Error("The format of mid-crop must be <number>,<number> .");
                         }
                         commands.add("crop");
+                    }
+                    if (options.addSuffix) {
+                        if (!setOption.rename) {
+                            setOption.rename = {};
+                        }
+                        setOption.rename.suffix = options.addSuffix;
                     }
                     // exec
                     console.log("args", commander_1.program.args);

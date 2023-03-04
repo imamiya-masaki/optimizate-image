@@ -190,11 +190,11 @@ var crop = function (file, fileType, cropArray) {
 };
 exports.crop = crop;
 var imageExec = function (filePath, commandSet, option) {
-    var _a, _b, _c;
+    var _a, _b, _c, _d, _e;
     return __awaiter(this, void 0, void 0, function () {
-        var imagePool, lastFileName, isDirectory, targetFiles, fileNames, _i, fileNames_1, fileName, file, fileType, file, fileType, outputFiles, _d, targetFiles_1, targetFile, fileBuffer, fileType, cropArray, midCropArray, computedCoordinate, output, image, outputFile, outputFileType, splitFilePath, outputLastFileSplitName, outputLastFileName, outputFilePath, _e, outputFiles_1, outputFile;
-        return __generator(this, function (_f) {
-            switch (_f.label) {
+        var imagePool, lastFileName, isDirectory, targetFiles, fileNames, _i, fileNames_1, fileName, file, fileType, file, fileType, outputFiles, _f, targetFiles_1, targetFile, fileBuffer, fileType, cropArray, midCropArray, computedCoordinate, output, image, outputFile, outputFileType, splitFilePath, outputLastFileSplitName, outputLastFileName, outputFilePath, _g, outputFiles_1, outputFile;
+        return __generator(this, function (_h) {
+            switch (_h.label) {
                 case 0:
                     console.log({ filePath: filePath, commandSet: commandSet, option: option });
                     imagePool = new lib_1.ImagePool((0, os_1.cpus)().length);
@@ -206,35 +206,35 @@ var imageExec = function (filePath, commandSet, option) {
                     if (!isDirectory) return [3 /*break*/, 6];
                     return [4 /*yield*/, fs.readdir(filePath)];
                 case 1:
-                    fileNames = _f.sent();
+                    fileNames = _h.sent();
                     _i = 0, fileNames_1 = fileNames;
-                    _f.label = 2;
+                    _h.label = 2;
                 case 2:
                     if (!(_i < fileNames_1.length)) return [3 /*break*/, 5];
                     fileName = fileNames_1[_i];
                     return [4 /*yield*/, fs.readFile(filePath + fileName)];
                 case 3:
-                    file = _f.sent();
+                    file = _h.sent();
                     fileType = (0, exports.assumeExtension)(filePath + fileName);
                     targetFiles.push({ file: file, fileType: fileType, filePath: filePath + fileName });
-                    _f.label = 4;
+                    _h.label = 4;
                 case 4:
                     _i++;
                     return [3 /*break*/, 2];
                 case 5: return [3 /*break*/, 8];
                 case 6: return [4 /*yield*/, fs.readFile(filePath)];
                 case 7:
-                    file = _f.sent();
+                    file = _h.sent();
                     fileType = (0, exports.assumeExtension)(filePath);
                     targetFiles.push({ file: file, fileType: fileType, filePath: filePath });
-                    _f.label = 8;
+                    _h.label = 8;
                 case 8:
                     outputFiles = [];
-                    _d = 0, targetFiles_1 = targetFiles;
-                    _f.label = 9;
+                    _f = 0, targetFiles_1 = targetFiles;
+                    _h.label = 9;
                 case 9:
-                    if (!(_d < targetFiles_1.length)) return [3 /*break*/, 18];
-                    targetFile = targetFiles_1[_d];
+                    if (!(_f < targetFiles_1.length)) return [3 /*break*/, 18];
+                    targetFile = targetFiles_1[_f];
                     fileBuffer = targetFile.file;
                     fileType = targetFile.fileType;
                     if (!commandSet.has("crop")) return [3 /*break*/, 14];
@@ -243,29 +243,34 @@ var imageExec = function (filePath, commandSet, option) {
                     midCropArray = (_c = option === null || option === void 0 ? void 0 : option.crop) === null || _c === void 0 ? void 0 : _c.midCrop;
                     return [4 /*yield*/, (0, exports.computeXY)(fileBuffer, fileType, midCropArray[0], midCropArray[1])];
                 case 10:
-                    computedCoordinate = _f.sent();
+                    computedCoordinate = _h.sent();
                     cropArray = __spreadArray([computedCoordinate.x, computedCoordinate.y], midCropArray, true);
-                    _f.label = 11;
+                    _h.label = 11;
                 case 11:
                     if (!cropArray) return [3 /*break*/, 13];
                     return [4 /*yield*/, (0, exports.crop)(fileBuffer, fileType, cropArray)];
                 case 12:
-                    fileBuffer = _f.sent();
+                    fileBuffer = _h.sent();
                     return [3 /*break*/, 14];
-                case 13: throw Error("cropArray is undefined");
+                case 13:
+                    console.table(option === null || option === void 0 ? void 0 : option.crop);
+                    throw Error("cropArray is undefined");
                 case 14:
                     output = { file: fileBuffer, fileType: fileType };
                     if (!commandSet.has("optimize")) return [3 /*break*/, 16];
                     image = imagePool.ingestImage(output.file);
                     return [4 /*yield*/, (0, exports.optimize)(image, output.fileType, option)];
                 case 15:
-                    output = _f.sent();
-                    _f.label = 16;
+                    output = _h.sent();
+                    _h.label = 16;
                 case 16:
                     outputFile = output.file;
                     outputFileType = output.fileType;
                     splitFilePath = targetFile.filePath.split('/');
                     outputLastFileSplitName = splitFilePath[splitFilePath.length - 1].split('.');
+                    if ((_d = option.rename) === null || _d === void 0 ? void 0 : _d.suffix) {
+                        outputLastFileSplitName[outputLastFileSplitName.length - 2] = outputLastFileSplitName[outputLastFileSplitName.length - 2] + "-" + ((_e = option.rename) === null || _e === void 0 ? void 0 : _e.suffix);
+                    }
                     outputLastFileSplitName[outputLastFileSplitName.length - 1] = outputFileType;
                     outputLastFileName = outputLastFileSplitName.join('.');
                     splitFilePath[splitFilePath.length - 1] = outputLastFileName;
@@ -274,28 +279,28 @@ var imageExec = function (filePath, commandSet, option) {
                         file: outputFile,
                         filePath: outputFilePath
                     });
-                    _f.label = 17;
+                    _h.label = 17;
                 case 17:
-                    _d++;
+                    _f++;
                     return [3 /*break*/, 9];
                 case 18:
                     // 出力層
                     console.log('出力層: outputFiles', outputFiles.map(function (file) { return file.filePath; }), 'dstFilePath: ', filePath);
-                    _e = 0, outputFiles_1 = outputFiles;
-                    _f.label = 19;
+                    _g = 0, outputFiles_1 = outputFiles;
+                    _h.label = 19;
                 case 19:
-                    if (!(_e < outputFiles_1.length)) return [3 /*break*/, 22];
-                    outputFile = outputFiles_1[_e];
+                    if (!(_g < outputFiles_1.length)) return [3 /*break*/, 22];
+                    outputFile = outputFiles_1[_g];
                     return [4 /*yield*/, fs.writeFile(outputFile.filePath, outputFile.file)];
                 case 20:
-                    _f.sent();
-                    _f.label = 21;
+                    _h.sent();
+                    _h.label = 21;
                 case 21:
-                    _e++;
+                    _g++;
                     return [3 /*break*/, 19];
                 case 22: return [4 /*yield*/, imagePool.close()];
                 case 23:
-                    _f.sent();
+                    _h.sent();
                     return [2 /*return*/, outputFiles];
             }
         });
